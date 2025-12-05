@@ -1,0 +1,76 @@
+name: Sync Agents
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/agents/**'
+      - '.github/workflows/sync-agents.yml'
+
+jobs:
+  sync-agents:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync agents folder
+        run: |
+          # Remove existing agents directory in root
+          rm -rf agents
+          
+          # Create new agents directory
+          mkdir -p agents
+          
+          # Copy all files from .github/agents to agents
+          cp -r .github/agents/* agents/
+          
+          # Ensure proper permissions
+          chmod -R 755 agents
+
+      - name: Generate agent registry
+        run: |
+          # Extract agent names from .github/agents/*.agent.md files
+          # and update the orchestrator registry
+          
+          # Create a temporary registry file
+          registry_content="<agent_registry>\nThe following agents are deployed and available for orchestration:\n\n"
+          
+          # Loop through each agent file and extract name and description
+          for agent_file in .github/agents/*.agent.md; do
+            if [ -f "$agent_file" ]; then
+              agent_name=$(grep "^name:" "$agent_file" | head -1 | sed 's/^name: *//' | sed "s/'//g" | sed 's/"//g')
+              agent_desc=$(grep "^description:" "$agent_file" | head -1 | sed 's/^description: *//' | sed "s/'//g" | sed 's/"//g')
+              
+              if [ -n "$agent_name" ] && [ -n "$agent_desc" ]; then
+                registry_content="$registry_content- **$agent_name**: $agent_desc\n"
+              fi
+            fi
+          done
+          
+          registry_content="$registry_content\n**Note:** This registry is automatically populated by CI/CD during deployment. When new agents are added to \`.github/agents/\`, update this list in the orchestrator.\n</agent_registry>"
+          
+          # Update orchestrator.agent.md with the new registry
+          # First, remove the old registry section
+          sed -i '/<agent_registry>/,/<\/agent_registry>/d' .github/agents/orchestrator.agent.md
+          
+          # Add the new registry at the end (before the final closing tag)
+          echo -e "$registry_content" >> .github/agents/orchestrator.agent.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if there are changes to commit
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -f agents/
+            git add .github/agents/
+            git commit -m "chore: sync agents and update registry from .github/agents"
+            git push
+          else
+            echo "No changes to commit"
+          fi
