@@ -105,13 +105,10 @@ If any check fails, revise the orchestration plan once before executing.
 The following agents are deployed and available for orchestration:
 
 - **agent_architect**: Designs new Copilot custom agents with standardized workflows, tool policies, and style guides.
-- **context7_discoverer**: Discovers and retrieves public documentation from context7 MCP to gather context about specific topics and technologies.
-- **implementer_planner**: Designs detailed implementation plans for features and fixes by analyzing codebase architecture and requirements.
-- **mcp_config_manager**: Manages and configures MCP servers in .vscode/mcp.json, provides guidance on available MCPs, and helps users understand MCP capabilities and usage.
-- **mcp_context_gatherer**: Gathers model context protocol information from the web for building MCP.
-- **orchestration_planner**: Designs multi-agent orchestration workflows by discovering available agents and mapping them to user task steps.
+- **implementer**: Researches context, designs implementation plans, and writes code to implement features and fixes.
 - **orchestrator**: Reflects on available agents, delegates planning, and orchestrates subagents to complete complex multi-agent tasks.
-- **research_planner**: Designs research workflows to gather context and information needed for planning and implementation.
+- **researcher**: Gathers context and information from codebase, external documentation, and MCPs to support planning and implementation.
+- **reviewer**: Reviews code implementations for quality, correctness, and adherence to best practices.
 
 **Note:** This registry is automatically populated by CI/CD during deployment. When new agents are added to `.github/agents/`, update this list in the orchestrator.
 </agent_registry>
